@@ -1,0 +1,68 @@
+﻿@page "/blazor-javascript"
+
+@inject IJSRuntime JSRuntime
+
+<h3>CompBlazorJavaScript</h3>
+
+<div class="row mt-4">
+    <div class="col-4">
+        <button class="btn btn-sm btn-outline-secondary" @onclick="(() => DemoConfirmacion(MensajeConfirmacion))">Demo Botón Confirmar</button>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-4">
+        <button class="btn btn-sm btn-outline-success" @onclick="DemoSuccess">Demo Toaster Success</button>
+        <button class="btn btn-sm btn-outline-danger" @onclick="DemoError">Demo Toaster Error</button>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-4">
+        <button class="btn btn-sm btn-outline-success" @onclick="DemoSuccessSwal">Demo Swal Success</button>
+        <button class="btn btn-sm btn-outline-danger" @onclick="DemoErrorSwal">Demo Swal Error</button>
+    </div>
+</div>
+
+<div class="row">
+    @if (ConfirmarResultado)
+    {
+        <p>Confirmación Hecha!!</p>
+    }
+    else
+    {
+        <p>Confirmación Pendiente!!</p>
+    }
+</div>
+
+@code {
+    private string MensajeConfirmacion = "¿Está seguro de dar click?";
+    private bool ConfirmarResultado { get; set; }
+    
+    private async Task DemoConfirmacion(string mensaje)
+    {
+        ConfirmarResultado = await JSRuntime.InvokeAsync<bool>("confirm", mensaje);
+    }
+
+    private async Task DemoSuccess()
+    {
+        //await JSRuntime.InvokeVoidAsync("ShowToastr", "success", "Tarea completada");
+        await JSRuntime.ToastrSuccess("Tarea completada");
+    }
+
+    private async Task DemoError()
+    {
+        //await JSRuntime.InvokeVoidAsync("ShowToastr", "error", "Error al ejecutar la tarea");
+        await JSRuntime.ToastrError("Error al ejecutar la tarea");
+    }
+
+    private async Task DemoSuccessSwal()
+    {
+        await JSRuntime.InvokeVoidAsync("ShowSwal", "success", "Tarea completada");
+    }
+
+    private async Task DemoErrorSwal()
+    {
+        await JSRuntime.InvokeVoidAsync("ShowSwal", "error", "Error al ejecutar la tarea");
+    }
+}
