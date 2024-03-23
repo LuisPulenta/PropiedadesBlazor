@@ -39,5 +39,9 @@ namespace Propiedades.Modelos.DTO
         public bool Activo { get; set; }
 
         public int CategoriaId { get; set; }
+
+        public virtual ICollection<ImagenPropiedad>? ImagenesPropiedad { get; set; }
+
+        public List<string>? UrlImagenes { get; set; }
     }
 }

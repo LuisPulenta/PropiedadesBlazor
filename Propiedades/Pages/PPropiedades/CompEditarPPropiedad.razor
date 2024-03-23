@@ -1,4 +1,4 @@
-﻿@page "/crear-propiedad"
+﻿@page "/editar-propiedad/{Id:int}"
 
 @inject IPropiedadRepositorio PropiedadRepositorio
 @inject ICategoriaRepositorio CategoriaRepositorio
@@ -8,18 +8,18 @@
 @inject IJSRuntime JsRuntime
 
 
-<h1 class="text-center">Crear Propiedad</h1>
+<h1 class="text-center">Editar Propiedad</h1>
 
 <div class="card">
     <div class="card-header">
         <div class="row">
             <div class="col-7">
-                <h2 class="text-dark">Nueva Propiedad</h2>
+                <h2 class="text-dark">Editar Propiedad</h2>
             </div>
         </div>
     </div>
     <div class="card-body">
-        <EditForm Model="propiedadDTO" OnValidSubmit="@( () => ManejadorOnCrearPropiedad())">
+        <EditForm Model="propiedadDTO" OnValidSubmit="@( () => ManejadorOnEditarPropiedad())">
             <DataAnnotationsValidator></DataAnnotationsValidator>
             <ValidationSummary></ValidationSummary>
             <div class="container">
@@ -185,7 +185,7 @@
                 <div class="form-group">
                     <div class="row">
                         <div class="col-2">
-                            <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-gear-fill"></i>&nbsp; Guardar Propiedad</button>
+                            <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-gear-fill"></i>&nbsp; Actualizar Propiedad</button>
                         </div>
                         <div class="col-6">
                             <NavLink href="propiedades" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left-circle-fill"></i>&nbsp; Volver atrás</NavLink>
@@ -207,16 +207,26 @@
     private bool estaIniciadoProcesoSubidaImagen { get; set; } = false;
     private ImagenPropiedadDTO imagenDTO { get; set; } = new ImagenPropiedadDTO();
 
+    [Parameter]
+    public int? Id { get; set; }
+
     //Para obtener la lista de categorías en un DropDown o lista <select>
     private IEnumerable<DropDownCategoriaDTO> DropDownCategoriaDTO { get; set; } = new List<DropDownCategoriaDTO>();
 
     protected override async Task OnInitializedAsync()
     {
         DropDownCategoriaDTO = await CategoriaRepositorio.GetDropDownCategorias();
+        if (Id != null)
+        {
+            propiedadDTO = await PropiedadRepositorio.GetPropiedad(Id.Value);
+            if(propiedadDTO?.ImagenesPropiedad!=null)
+            {
+                propiedadDTO.UrlImagenes = propiedadDTO.ImagenesPropiedad.Select(u => u.UrlImagenPropiedad).ToList();
+            }
+        }
     }
 
-
-    private async Task ManejadorOnCrearPropiedad()
+    private async Task ManejadorOnEditarPropiedad()
     {
         var nombrePropiedad = await PropiedadRepositorio.NombrePropiedadExiste(propiedadDTO.Nombre);
         if (nombrePropiedad != null)

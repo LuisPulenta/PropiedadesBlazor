@@ -69,9 +69,21 @@ namespace Propiedades.Repositorio
         //------------------------------------------------------------------------------------------------------------
         public async Task<IEnumerable<PropiedadDTO>> GetAllPropiedades()
         {
+            //Version 1
+            //try
+            //{
+            //    IEnumerable<PropiedadDTO> propiedadsDTO = _mapper.Map<IEnumerable<Propiedad>, IEnumerable<PropiedadDTO>>(_bd.Propiedades);
+            //    return (propiedadsDTO);
+            //}
+            //catch (Exception ex)
+            //{
+            //    return null;
+            //}
+
+            //Version 2
             try
             {
-                IEnumerable<PropiedadDTO> propiedadsDTO = _mapper.Map<IEnumerable<Propiedad>, IEnumerable<PropiedadDTO>>(_bd.Propiedades);
+                IEnumerable<PropiedadDTO> propiedadsDTO = _mapper.Map<IEnumerable<Propiedad>, IEnumerable<PropiedadDTO>>(_bd.Propiedades.Include(x=>x.ImagenesPropiedad));
                 return (propiedadsDTO);
             }
             catch (Exception ex)
