@@ -210,12 +210,13 @@
     //Para obtener la lista de categorías en un DropDown o lista <select>
     private IEnumerable<DropDownCategoriaDTO> DropDownCategoriaDTO { get; set; } = new List<DropDownCategoriaDTO>();
 
+    //-----------------------------------------------------------------------------------------------------------
     protected override async Task OnInitializedAsync()
     {
         DropDownCategoriaDTO = await CategoriaRepositorio.GetDropDownCategorias();
     }
 
-
+    //-----------------------------------------------------------------------------------------------------------
     private async Task ManejadorOnCrearPropiedad()
     {
         var nombrePropiedad = await PropiedadRepositorio.NombrePropiedadExiste(propiedadDTO.Nombre);
@@ -234,6 +235,7 @@
         navigationManager.NavigateTo("propiedades");
     }
 
+    //-----------------------------------------------------------------------------------------------------------
     private async Task ManejadorOnSubidaArchivo(InputFileChangeEventArgs e)
     {
         estaIniciadoProcesoSubidaImagen = true;
@@ -288,6 +290,7 @@
         }
     }
 
+    //-----------------------------------------------------------------------------------------------------------
     internal async Task BorrarImagen(string urlImagen)
     {
         try
@@ -307,6 +310,7 @@
         }
     }
 
+    //-----------------------------------------------------------------------------------------------------------
     private async Task AgregarImagenesPropiedad(PropiedadDTO propDTO)
     {
         foreach (var urlImagen in propiedadDTO.UrlImagenes)
@@ -322,5 +326,4 @@
             }
         }
     }
-
 }

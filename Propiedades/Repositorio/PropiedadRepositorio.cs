@@ -26,20 +26,23 @@ namespace Propiedades.Repositorio
             {
                 if (propiedadId == propiedadDTO.Id)
                 {
+                    //Válido para actualizar
                     Propiedad propiedad = await _bd.Propiedades.FindAsync(propiedadId);
-                    Propiedad prop = _mapper.Map<PropiedadDTO,Propiedad>(propiedadDTO,propiedad);
-                    prop.FechaActualizacion = DateTime.Now;
-                    var propiedadActualizada = _bd.Propiedades.Update(prop);
+                    Propiedad propie = _mapper.Map<PropiedadDTO, Propiedad>(propiedadDTO, propiedad);
+                    propie.FechaActualizacion = DateTime.Now;
+                    var propiedadActualizada = _bd.Propiedades.Update(propie);
                     await _bd.SaveChangesAsync();
                     return _mapper.Map<Propiedad, PropiedadDTO>(propiedadActualizada.Entity);
                 }
                 else
                 {
+                    //Inválido
                     return null;
                 }
             }
             catch (Exception ex)
             {
+
                 return null;
             }
         }
@@ -83,7 +86,10 @@ namespace Propiedades.Repositorio
             //Version 2
             try
             {
-                IEnumerable<PropiedadDTO> propiedadsDTO = _mapper.Map<IEnumerable<Propiedad>, IEnumerable<PropiedadDTO>>(_bd.Propiedades.Include(x=>x.ImagenesPropiedad));
+                IEnumerable<PropiedadDTO> propiedadsDTO = _mapper.Map<IEnumerable<Propiedad>, IEnumerable<PropiedadDTO>>(_bd.Propiedades
+                    .Include(x=>x.ImagenesPropiedad)
+                    .Include(x => x.Categoria)
+                    );
                 return (propiedadsDTO);
             }
             catch (Exception ex)

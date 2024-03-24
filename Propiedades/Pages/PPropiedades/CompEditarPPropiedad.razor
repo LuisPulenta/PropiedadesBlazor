@@ -1,8 +1,7 @@
 ﻿@page "/editar-propiedad/{Id:int}"
-
 @inject IPropiedadRepositorio PropiedadRepositorio
 @inject ICategoriaRepositorio CategoriaRepositorio
-@inject IImagenPropiedadRepositorio IMagenPropiedadRepositorio
+@inject IImagenPropiedadRepositorio ImagenPropiedadRepositorio
 @inject ISubidaArchivo SubidaArchivo
 @inject NavigationManager navigationManager
 @inject IJSRuntime JsRuntime
@@ -14,7 +13,7 @@
     <div class="card-header">
         <div class="row">
             <div class="col-7">
-                <h2 class="text-dark">Editar Propiedad</h2>
+                <h2 class="text-dark">Editar Propiedad Existente</h2>
             </div>
         </div>
     </div>
@@ -138,8 +137,9 @@
                                 @*  <option value="">--Selecciona una categoría--</option>*@
                                 @foreach (var categoria in DropDownCategoriaDTO)
                                 {
-                                    <option value="@categoria.Id">@categoria.NombreCategoria</option>
+                                    <option selected="@(categoria.Id == propiedadDTO.CategoriaId)" value="@categoria.Id">@categoria.NombreCategoria</option>
                                 }
+
                             </InputSelect>
 
                         </div>
@@ -171,7 +171,7 @@
                                         <span class="titulo-imagen-propiedad">@serial</span>
                                     </div>
 
-                                    <button type="button" @onclick="() => BorrarImagen(imagenPropiedad)" class="btn btn-sm btn-outline-danger btn-block mt-4">
+                                    <button type="button" @onclick="() => BorrarImagen(imagenPropiedad)" class="btn btn-outline-danger btn-block mt-4">
                                         Borrar
                                     </button>
 
@@ -185,10 +185,10 @@
                 <div class="form-group">
                     <div class="row">
                         <div class="col-2">
-                            <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-gear-fill"></i>&nbsp; Actualizar Propiedad</button>
+                            <button type="submit" class="btn btn-success"><i class="bi bi-gear-fill"></i>&nbsp; Editar Propiedad</button>
                         </div>
                         <div class="col-6">
-                            <NavLink href="propiedades" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left-circle-fill"></i>&nbsp; Volver atrás</NavLink>
+                            <NavLink href="propiedades" class="btn btn-secondary"><i class="bi bi-arrow-left-circle-fill"></i>&nbsp; Volver atrás</NavLink>
                         </div>
                     </div>
                 </div>
@@ -206,6 +206,7 @@
     private DropDownCategoriaDTO categoriaSeleccionada = new DropDownCategoriaDTO();
     private bool estaIniciadoProcesoSubidaImagen { get; set; } = false;
     private ImagenPropiedadDTO imagenDTO { get; set; } = new ImagenPropiedadDTO();
+    private List<string> NombresImagenesBorrada { get; set; } = new List<string>();
 
     [Parameter]
     public int? Id { get; set; }
@@ -213,40 +214,60 @@
     //Para obtener la lista de categorías en un DropDown o lista <select>
     private IEnumerable<DropDownCategoriaDTO> DropDownCategoriaDTO { get; set; } = new List<DropDownCategoriaDTO>();
 
-    protected override async Task OnInitializedAsync()
+
+    //---------------------------------------------------------------------------------------------------
+    protected override async Task OnParametersSetAsync()
     {
         DropDownCategoriaDTO = await CategoriaRepositorio.GetDropDownCategorias();
+        //propiedadDTO.CategoriaId = categoriaSeleccionada.Id;
+
         if (Id != null)
         {
             propiedadDTO = await PropiedadRepositorio.GetPropiedad(Id.Value);
-            if(propiedadDTO?.ImagenesPropiedad!=null)
+            
+            if (propiedadDTO?.ImagenesPropiedad != null)
             {
                 propiedadDTO.UrlImagenes = propiedadDTO.ImagenesPropiedad.Select(u => u.UrlImagenPropiedad).ToList();
             }
         }
+
     }
 
+    //---------------------------------------------------------------------------------------------------
     private async Task ManejadorOnEditarPropiedad()
     {
-        var nombrePropiedad = await PropiedadRepositorio.NombrePropiedadExiste(propiedadDTO.Nombre);
-        if (nombrePropiedad != null)
-        {
-            //Existe esa propiedad
-            await JsRuntime.ToastrError("El nombre de la propiedad ya existe");
-            return;
-        }
-
-        //Si entra aquí entonces no existe y se debe crear en base de datos
+        //Se obtiene el Id de la categoría, es decir CategoriaId del DropDown
         propiedadDTO.CategoriaId = categoriaSeleccionada.Id;
-        var crearPropiedad = await PropiedadRepositorio.CrearPropiedad(propiedadDTO);
-        await AgregarImagenesPropiedad(crearPropiedad);
-        await JsRuntime.ToastrSuccess("Propiedad creada correctamente");
+
+        //Si entra aquí se actualiza la propiedad con imagénes
+        var resultadoActualizarPropiedad = await PropiedadRepositorio.ActualizarPropiedad(propiedadDTO.Id, propiedadDTO);
+
+
+        if ((propiedadDTO.UrlImagenes != null && propiedadDTO.UrlImagenes.Any()) || (NombresImagenesBorrada != null && NombresImagenesBorrada.Any()))
+        {
+            if (NombresImagenesBorrada != null && NombresImagenesBorrada.Any())
+            {
+                foreach (var nombreImagenBorrada in NombresImagenesBorrada)
+                {
+                    var nombreImagen = nombreImagenBorrada.Replace($"{navigationManager.BaseUri}ImagenesPropiedades/", "");
+
+                    var resultado = SubidaArchivo.BorrarArchivo(nombreImagen);
+                    await ImagenPropiedadRepositorio.BorrarPropiedadimagenPorUrlImagen(nombreImagenBorrada);
+                }
+            }
+
+            await AgregarImagenesPropiedad(resultadoActualizarPropiedad);
+        }
+        await JsRuntime.ToastrSuccess("Propiedad actualizada correctamente.");
         navigationManager.NavigateTo("propiedades");
     }
 
+    //---------------------------------------------------------------------------------------------------
     private async Task ManejadorOnSubidaArchivo(InputFileChangeEventArgs e)
     {
         estaIniciadoProcesoSubidaImagen = true;
+
+
         try
         {
             var imagenes = new List<string>();
@@ -298,25 +319,35 @@
         }
     }
 
+    //---------------------------------------------------------------------------------------------------
     internal async Task BorrarImagen(string urlImagen)
     {
         try
         {
             var imageIndex = propiedadDTO.UrlImagenes.FindIndex(x => x == urlImagen);
             var nombreImagen = urlImagen.Replace($"{navigationManager.BaseUri}ImagenesPropiedades/", "");
-            if (propiedadDTO.Id == 0)
-            {
-                var result = SubidaArchivo.BorrarArchivo(nombreImagen);
-            }
+            //if (propiedadDTO.Id == 0)
+            //{
+            //    var result = SubidaArchivo.BorrarArchivo(nombreImagen);
+            //}
+            //if (propiedadDTO.Id > 0)
+            //{
+            //    NombresImagenesBorrada ??= new List<string>();
+            //    NombresImagenesBorrada.Add(urlImagen);
+            //}
+
+            NombresImagenesBorrada ??= new List<string>();
+            NombresImagenesBorrada.Add(urlImagen);
+
             propiedadDTO.UrlImagenes.RemoveAt(imageIndex);
         }
         catch (Exception ex)
         {
             await JsRuntime.ToastrError(ex.Message);
-            return;
         }
     }
 
+    //---------------------------------------------------------------------------------------------------
     private async Task AgregarImagenesPropiedad(PropiedadDTO propDTO)
     {
         foreach (var urlImagen in propiedadDTO.UrlImagenes)
@@ -328,7 +359,7 @@
                         PropiedadId = propDTO.Id,
                         UrlImagenPropiedad = urlImagen
                     };
-                await IMagenPropiedadRepositorio.CrearPropiedadimagen(imagenDTO);
+                await ImagenPropiedadRepositorio.CrearPropiedadimagen(imagenDTO);
             }
         }
     }

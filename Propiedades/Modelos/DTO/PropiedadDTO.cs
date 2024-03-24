@@ -40,6 +40,8 @@ namespace Propiedades.Modelos.DTO
 
         public int CategoriaId { get; set; }
 
+        public virtual Categoria Categoria { get; set; } = null!;
+
         public virtual ICollection<ImagenPropiedad>? ImagenesPropiedad { get; set; }
 
         public List<string>? UrlImagenes { get; set; }
