@@ -38,6 +38,8 @@ namespace Propiedades.Modelos.DTO
         [Required(ErrorMessage = "El campo {0} es obligatorio")]
         public bool Activo { get; set; }
 
+        public DateTime FechaActualizacion { get; set; }
+
         public int CategoriaId { get; set; }
 
         public virtual Categoria Categoria { get; set; } = null!;
