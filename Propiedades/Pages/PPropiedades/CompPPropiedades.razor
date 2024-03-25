@@ -2,6 +2,8 @@
 
 @inject IPropiedadRepositorio PropiedadRepositorio
 @inject IJSRuntime JsRuntime
+@inject ISubidaArchivo SubidaArchivo
+@inject NavigationManager navigationManager
 
 <h1 class="text-center">Propiedades</h1>
 
@@ -67,35 +69,45 @@
     </div>
 </div>
 
-<ConfirmacionBorrado CambioConfirmacion="Click_Confirmar_borrado"></ConfirmacionBorrado>
+<ConfirmacionBorrado ProcesandoComponentePadre="estaProcesando" CambioConfirmacion="Click_Confirmar_Borrado"></ConfirmacionBorrado>
 
 @code {
     private IEnumerable<PropiedadDTO> propiedadDTO { get; set; } = new List<PropiedadDTO>();
     private bool estaProcesando { get; set; } = false;
     private int? BorrarIdPropiedad { get; set; } = null;
 
-
+    //------------------------------------------------------------------------------------------------------
     protected async override Task OnInitializedAsync()
     {
         propiedadDTO = await PropiedadRepositorio.GetAllPropiedades();
     }
 
+    //------------------------------------------------------------------------------------------------------
     // protected async override Task OnAfterRenderAsync(bool firstRender)
     // {
     //     await JsRuntime.InvokeVoidAsync("MostrarModalConfirmacionBorrado");
     // }
 
+    //------------------------------------------------------------------------------------------------------
     private async Task ManejadorOnBorrar(int propiedadId)
     {
         BorrarIdPropiedad = propiedadId;
         await JsRuntime.InvokeVoidAsync("MostrarModalConfirmacionBorrado");
     }
 
-    public async Task Click_Confirmar_borrado(bool confirmado)
+    //------------------------------------------------------------------------------------------------------
+    public async Task Click_Confirmar_Borrado(bool confirmado)
     {
         estaProcesando = true;
         if(confirmado && BorrarIdPropiedad != null)
         {
+            PropiedadDTO propiedad = await PropiedadRepositorio.GetPropiedad(BorrarIdPropiedad.Value);
+            foreach (var imagen in propiedad.ImagenesPropiedad)
+            {
+                var nombreImagen = imagen.UrlImagenPropiedad.Replace($"{navigationManager.BaseUri}ImagenesPropiedades/", "");
+                SubidaArchivo.BorrarArchivo(nombreImagen);
+            }
+
             await PropiedadRepositorio.BorrarPropiedad(BorrarIdPropiedad.Value);
             await JsRuntime.ToastrSuccess("Propiedad borrada correctamente");
             propiedadDTO = await PropiedadRepositorio.GetAllPropiedades();

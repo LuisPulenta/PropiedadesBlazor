@@ -53,6 +53,9 @@ namespace Propiedades.Repositorio
             var propiedad = await _bd.Propiedades.FindAsync(propiedadId);
             if(propiedad != null)
             {
+                var todasImagenes = await _bd.ImagenesPropiedad.Where(x => x.Id == propiedadId).ToListAsync();
+                _bd.ImagenesPropiedad.RemoveRange(todasImagenes);
+                
                 _bd.Propiedades.Remove(propiedad);
                 return await _bd.SaveChangesAsync();
             }

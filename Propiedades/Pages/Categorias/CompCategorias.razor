@@ -1,6 +1,9 @@
 ﻿@page "/categorias"
 
 @inject ICategoriaRepositorio CategoriaRepositorio
+@inject IJSRuntime JsRuntime
+@inject ISubidaArchivo SubidaArchivo
+@inject NavigationManager navigationManager
 
 <h1 class="text-center">Categorias</h1>
 
@@ -53,9 +56,12 @@
 
 </div>
 
+<ConfirmacionBorrado ProcesandoComponentePadre="estaProcesando" CambioConfirmacion="Click_Confirmar_Borrado"></ConfirmacionBorrado>
 
 @code {
     private IEnumerable<CategoriaDTO> categoriaDTO { get; set; } = new List<CategoriaDTO>();
+    private bool estaProcesando { get; set; } = false;
+    private int? BorrarIdCategoria { get; set; } = null;
 
     protected async override Task OnInitializedAsync()
     {
@@ -64,6 +70,21 @@
 
     private async Task ManejadorOnBorrar(int categoriaId)
     {
-        
+        BorrarIdCategoria = categoriaId;
+        await JsRuntime.InvokeVoidAsync("MostrarModalConfirmacionBorrado");
+    }
+
+    public async Task Click_Confirmar_Borrado(bool confirmado)
+    {
+        estaProcesando = true;
+        if (confirmado && BorrarIdCategoria != null)
+        {
+            await CategoriaRepositorio.BorrarCategoria(BorrarIdCategoria.Value);
+            await JsRuntime.ToastrSuccess("Categoría borrada correctamente");
+            categoriaDTO = await CategoriaRepositorio.GetAllCategorias();
+        }
+
+        await JsRuntime.InvokeVoidAsync("OcultarModalConfirmacionBorrado");
+        estaProcesando = false;
     }
 }
