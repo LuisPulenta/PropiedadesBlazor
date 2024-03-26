@@ -1,13 +1,18 @@
 ﻿<CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
-            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+                    <h2>No tiene acceso</h2>
+                    <p>La página que intentas visitar necesita más permisos</p>
+                </NotAuthorized>
+            </AuthorizeRouteView> />
             <FocusOnNavigate RouteData="@routeData" Selector="h1" />
         </Found>
         <NotFound>
-            <PageTitle>Not found</PageTitle>
+            <PageTitle>No encontrado</PageTitle>
             <LayoutView Layout="@typeof(MainLayout)">
-                <p role="alert">Sorry, there's nothing at this address.</p>
+                <p role="alert">Error, no hay nada en esta dirección.</p>
             </LayoutView>
         </NotFound>
     </Router>

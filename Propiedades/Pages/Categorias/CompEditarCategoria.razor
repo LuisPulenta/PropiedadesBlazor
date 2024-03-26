@@ -4,6 +4,8 @@
 @inject NavigationManager navigationManager
 @inject IJSRuntime JSRuntime
 
+@attribute [Authorize(Roles = "Administrador")]
+
 <h1 class="text-center">Editar Categoría</h1>
 
 <div class="card">

@@ -56,7 +56,7 @@ namespace Propiedades.Areas.Identity.Pages.Account.Manage
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
             [Phone]
-            [Display(Name = "Phone number")]
+            [Display(Name = "N° de Teléfono")]
             public string PhoneNumber { get; set; }
         }
 
@@ -105,13 +105,13 @@ namespace Propiedades.Areas.Identity.Pages.Account.Manage
                 var setPhoneResult = await _userManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
                 if (!setPhoneResult.Succeeded)
                 {
-                    StatusMessage = "Unexpected error when trying to set phone number.";
+                    StatusMessage = "Error no esperado al tratar de actualizar su N° de Teléfono.";
                     return RedirectToPage();
                 }
             }
 
             await _signInManager.RefreshSignInAsync(user);
-            StatusMessage = "Your profile has been updated";
+            StatusMessage = "Sus datos han sido actualizados";
             return RedirectToPage();
         }
     }
