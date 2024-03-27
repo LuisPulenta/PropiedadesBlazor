@@ -32,6 +32,10 @@ builder.Services.AddScoped<IPropiedadRepositorio, PropiedadRepositorio>();
 builder.Services.AddScoped<IImagenPropiedadRepositorio, ImagenPropiedadRepositorio>();
 builder.Services.AddScoped<ISubidaArchivo, SubidaArchivo>();
 
+//Siembra de Datos
+builder.Services.AddScoped<IBdInicializador, BdInicializador>();
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -50,6 +54,9 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
+//Siembra de Datos
+SiembraDeDatos();
+
 app.UseRouting();
 
 app.UseAuthorization();
@@ -59,3 +66,13 @@ app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
 app.Run();
+
+
+void SiembraDeDatos()
+{
+    using(var scope = app.Services.CreateScope())
+    {
+        var inicializadorBD = scope.ServiceProvider.GetRequiredService<IBdInicializador>();
+        inicializadorBD.Inicializar();
+    }
+}
